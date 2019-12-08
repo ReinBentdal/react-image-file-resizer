@@ -5,26 +5,35 @@
 */
 class Resizer {
 
-    static changeHeightWidth(height, maxHeight, width, maxWidth) {
+    static changeHeightWidth(height, maxHeight, minHeight, width, maxWidth, minWidth) {
         if (width > maxWidth) {
             height = Math.round(height * maxWidth / width);
             width = maxWidth;
-        }
+        } 
         if (height > maxHeight) {
             width = Math.round(width * maxHeight / height);
             height = maxHeight;
         }
+        if (width < minWidth) {
+            height = Math.round(height * minWidth / width);
+            width = minWidth;
+        }
+        if (height < minHeight) {
+            width = Math.round(width * minHeight / height);
+            height = minHeight;
+        }
+
         return {height, width}
     }
 
-    static resizeAndRotateImage(image, maxWidth, maxHeight, compressFormat = "jpeg" , quality = 100, rotation = 0) {
+    static resizeAndRotateImage(image, maxWidth, maxHeight, minWidth, minHeight, compressFormat = "jpeg" , quality = 100, rotation = 0) {
         var qualityDecimal = quality / 100;
         var canvas = document.createElement('canvas');
     
         var width = image.width;
         var height = image.height;
     
-        var newHeightWidth = this.changeHeightWidth(height, maxHeight, width, maxWidth);
+        var newHeightWidth = this.changeHeightWidth(height, maxHeight, minHeight, width, maxWidth, minWidth);
         if(rotation && (rotation === 90 || rotation === 270)) {
             canvas.width = newHeightWidth.height;
             canvas.height = newHeightWidth.width;
@@ -79,7 +88,7 @@ class Resizer {
         return blob;
     }
 
-    static createResizedImage(file, maxWidth, maxHeight, compressFormat, quality, rotation, responseUriFunc, outputType = 'base64') {
+    static createResizedImage(file, maxWidth, maxHeight, minWidth, minHeight, compressFormat, quality, rotation, responseUriFunc, outputType = 'base64') {
         var blob = null
         const reader = new FileReader();
         if(file) {
@@ -88,7 +97,7 @@ class Resizer {
                 var image = new Image();
                 image.src = reader.result;
                 image.onload = function () {
-                var resizedDataUrl = Resizer.resizeAndRotateImage(image, maxWidth, maxHeight, compressFormat, quality, rotation);
+                var resizedDataUrl = Resizer.resizeAndRotateImage(image, maxWidth, maxHeight, minWidth, minHeight, compressFormat, quality, rotation);
                 blob = Resizer.b64toBlob(resizedDataUrl, `image/${compressFormat}`);
                 outputType === 'blob' ?
                 responseUriFunc(blob)
@@ -102,7 +111,7 @@ class Resizer {
         } else {responseUriFunc('File Not Found')}
     }
 }   
-export default { imageFileResizer: (file, maxWidth, maxHeight, compressFormat, quality, rotation, responseUriFunc, outputType) => {
-        return Resizer.createResizedImage(file, maxWidth, maxHeight, compressFormat, quality, rotation, responseUriFunc, outputType)
+export default { imageFileResizer: (file, maxWidth, maxHeight, minWidth, minHeight, compressFormat, quality, rotation, responseUriFunc, outputType) => {
+        return Resizer.createResizedImage(file, maxWidth, maxHeight, minWidth, minHeight, compressFormat, quality, rotation, responseUriFunc, outputType)
     } 
 }
